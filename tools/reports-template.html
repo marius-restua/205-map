@@ -51,12 +51,25 @@ article+article{margin-top:16px}
     <div id="err" role="alert"></div>
   </form>
   <div id="out">
-    <div class="top"><a href="../">← Back to the map</a><button id="logout" type="button">Lock</button></div>
+    <div class="top"><a href="../">← Back to the map</a><span style="display:flex;gap:8px;align-items:center"><select id="lgSel" aria-label="Language" style="background:#2a343d;color:var(--tx);border:0;border-radius:6px;padding:5px 6px;font-size:13px"><option value="en">English</option><option value="ru">Русский</option><option value="ja">日本語</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="zh">中文</option><option value="it">Italiano</option><option value="pt">Português</option></select><button id="logout" type="button">Lock</button></span></div>
     <nav id="tabs" aria-label="Departments"></nav>
     <div id="content"></div>
   </div>
 </div>
 <script>
+const L={
+en:{t:'R4 Reports',p:'Only for KVK leadership. Enter the R4 password to read.',pw:'Password',rem:'Remember on this device',open:'Open reports',opening:'Opening…',wrong:'Wrong password. Try again.',back:'← Back to the map',lock:'Lock',tabs:['All','Summary','Warfare','Diplomacy','Intelligence','Recruitment / HR','Events']},
+ru:{t:'Отчёты R4',p:'Только для руководства KVK. Введите пароль R4.',pw:'Пароль',rem:'Запомнить на этом устройстве',open:'Открыть отчёты',opening:'Открываю…',wrong:'Неверный пароль. Попробуйте ещё раз.',back:'← Назад к карте',lock:'Закрыть',tabs:['Все','Итоги','Война','Дипломатия','Разведка','Набор / HR','События']},
+ja:{t:'R4レポート',p:'KVK幹部専用です。R4パスワードを入力してください。',pw:'パスワード',rem:'この端末で記憶する',open:'レポートを開く',opening:'開いています…',wrong:'パスワードが違います。',back:'← マップに戻る',lock:'ロック',tabs:['すべて','概要','戦闘','外交','情報','募集 / 人事','イベント']},
+es:{t:'Informes R4',p:'Solo para el liderazgo de KVK. Introduce la contraseña R4.',pw:'Contraseña',rem:'Recordar en este dispositivo',open:'Abrir informes',opening:'Abriendo…',wrong:'Contraseña incorrecta. Inténtalo de nuevo.',back:'← Volver al mapa',lock:'Bloquear',tabs:['Todo','Resumen','Guerra','Diplomacia','Inteligencia','Reclutamiento / RR. HH.','Eventos']},
+fr:{t:'Rapports R4',p:'Réservé à la direction KVK. Entrez le mot de passe R4.',pw:'Mot de passe',rem:'Se souvenir sur cet appareil',open:'Ouvrir les rapports',opening:'Ouverture…',wrong:'Mot de passe incorrect.',back:'← Retour à la carte',lock:'Verrouiller',tabs:['Tout','Résumé','Guerre','Diplomatie','Renseignement','Recrutement / RH','Événements']},
+de:{t:'R4-Berichte',p:'Nur für die KVK-Führung. R4-Passwort eingeben.',pw:'Passwort',rem:'Auf diesem Gerät merken',open:'Berichte öffnen',opening:'Wird geöffnet…',wrong:'Falsches Passwort.',back:'← Zurück zur Karte',lock:'Sperren',tabs:['Alle','Überblick','Krieg','Diplomatie','Aufklärung','Rekrutierung / HR','Events']},
+zh:{t:'R4 报告',p:'仅限 KVK 管理层。请输入 R4 密码。',pw:'密码',rem:'在此设备上记住',open:'打开报告',opening:'正在打开…',wrong:'密码错误，请重试。',back:'← 返回地图',lock:'锁定',tabs:['全部','摘要','战争','外交','情报','招募 / 人事','活动']},
+it:{t:'Report R4',p:'Solo per la leadership KVK. Inserisci la password R4.',pw:'Password',rem:'Ricorda su questo dispositivo',open:'Apri i report',opening:'Apertura…',wrong:'Password errata.',back:'← Torna alla mappa',lock:'Blocca',tabs:['Tutti','Riepilogo','Guerra','Diplomazia','Intelligence','Reclutamento / HR','Eventi']},
+pt:{t:'Relatórios R4',p:'Apenas para a liderança KVK. Digite a senha R4.',pw:'Senha',rem:'Lembrar neste dispositivo',open:'Abrir relatórios',opening:'Abrindo…',wrong:'Senha incorreta.',back:'← Voltar ao mapa',lock:'Bloquear',tabs:['Todos','Resumo','Guerra','Diplomacia','Inteligência','Recrutamento / RH','Eventos']}};
+let LG='en';try{const x=localStorage.getItem('kvkmap.lang');if(x&&L[JSON.parse(x)])LG=JSON.parse(x)}catch(e){try{const x=localStorage.getItem('kvkmap.lang');if(L[x])LG=x}catch(y){}}
+if(LG==='en'){const n=(navigator.language||'en').slice(0,2);if(L[n]&&!localStorage.getItem('kvkmap.lang'))LG=n}
+const U=L[LG];document.documentElement.lang=LG;
 const P=__PAYLOAD__;const K='kvk.r4pw';
 const d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function open(pw){
@@ -67,29 +80,32 @@ async function open(pw){
   return new TextDecoder().decode(pt);
 }
 const DEPTS=['All','Summary','Warfare','Diplomacy','Intelligence','Recruitment / HR','Events'];
+let BUNDLE=null;function pickLang(t){try{BUNDLE=JSON.parse(t)}catch(e){BUNDLE={en:t}}return BUNDLE[LG]||BUNDLE.en}
 function show(html){
   const c=document.getElementById('content');c.innerHTML=html;
   // tag every section (h2 + following blocks) with its department
-  c.querySelectorAll('article').forEach(a=>{let cur=null;[...a.children].forEach(el=>{if(el.tagName==='H2')cur=el.textContent.trim();if(cur)el.dataset.dept=cur})});
+  c.querySelectorAll('article').forEach(a=>{let cur=null;[...a.children].forEach(el=>{if(el.tagName==='H2')cur=el.dataset.dept||el.textContent.trim();if(cur)el.dataset.dept=cur})});
   const nav=document.getElementById('tabs');nav.innerHTML='';
-  DEPTS.forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d;b.className='tab';b.onclick=()=>pick(d);nav.appendChild(b)});
+  DEPTS.forEach((d,k)=>{const b=document.createElement('button');b.type='button';b.textContent=U.tabs[k]||d;b.dataset.d=d;b.className='tab';b.onclick=()=>pick(d);nav.appendChild(b)});
   let start='All';try{start=localStorage.getItem('kvk.r4tab')||'All'}catch(x){}
   pick(DEPTS.includes(start)?start:'All');
   document.getElementById('lock').style.display='none';document.getElementById('out').style.display='block'}
 function pick(d){
   try{localStorage.setItem('kvk.r4tab',d)}catch(x){}
-  document.querySelectorAll('#tabs .tab').forEach(b=>b.setAttribute('aria-pressed',b.textContent===d));
+  document.querySelectorAll('#tabs .tab').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===d));
   document.querySelectorAll('#content article').forEach(a=>{let any=false;[...a.children].forEach(el=>{
     const keep=d==='All'||el.tagName==='H1'||el.classList.contains('meta')||el.dataset.dept===d;el.style.display=keep?'':'none';if(el.dataset.dept===d)any=true});
     a.style.display=(d==='All'||any)?'':'none'});
   document.querySelectorAll('#content hr').forEach(h=>h.style.display=d==='All'?'':'none')}
+(()=>{const q=id=>document.getElementById(id);document.querySelector('#lock h1').textContent=U.t;document.querySelector('#lock p').textContent=U.p;document.querySelector('label[for=pw]').textContent=U.pw;document.querySelector('label[for=rem]').textContent=U.rem;document.querySelector('#lock button').textContent=U.open;document.querySelector('.top a').textContent=U.back;q('logout').textContent=U.lock;document.title='KVK – '+U.t})();
 document.getElementById('lock').addEventListener('submit',async ev=>{
-  ev.preventDefault();const pw=document.getElementById('pw').value;const err=document.getElementById('err');err.textContent='Opening…';
-  try{const h=await open(pw);if(document.getElementById('rem').checked){try{localStorage.setItem(K,pw)}catch(x){}}err.textContent='';show(h)}
-  catch(x){err.textContent='Wrong password. Try again.'}
+  ev.preventDefault();const pw=document.getElementById('pw').value;const err=document.getElementById('err');err.textContent=U.opening;
+  try{const h=pickLang(await open(pw));if(document.getElementById('rem').checked){try{localStorage.setItem(K,pw)}catch(x){}}err.textContent='';show(h)}
+  catch(x){err.textContent=U.wrong}
 });
+document.getElementById('lgSel').value=LG;document.getElementById('lgSel').addEventListener('change',e=>{try{localStorage.setItem('kvkmap.lang',e.target.value)}catch(x){}location.reload()});
 document.getElementById('logout').addEventListener('click',()=>{try{localStorage.removeItem(K)}catch(x){}location.reload()});
-(async()=>{let s=null;try{s=localStorage.getItem(K)}catch(x){}if(s){try{show(await open(s))}catch(x){try{localStorage.removeItem(K)}catch(y){}}}})();
+(async()=>{let s=null;try{s=localStorage.getItem(K)}catch(x){}if(s){try{show(pickLang(await open(s)))}catch(x){try{localStorage.removeItem(K)}catch(y){}}}})();
 </script>
 </body>
 </html>

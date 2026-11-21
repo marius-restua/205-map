@@ -34,9 +34,24 @@ async function getPassword() {
   return p1;
 }
 
-const files = readdirSync(srcDir).filter(f => f.endsWith('.html')).sort().reverse();
-if (!files.length) { console.error('No reports in reports-src/.'); process.exit(1); }
-const plain = files.map(f => readFileSync(join(srcDir, f), 'utf8')).join('\n<hr>\n');
+// Files: NAME.html = English, NAME.<lang>.html = translation (ru, ja, es, fr, de, zh, it, pt).
+const LANGS = ['en', 'ru', 'ja', 'es', 'fr', 'de', 'zh', 'it', 'pt'];
+const all = readdirSync(srcDir).filter(f => f.endsWith('.html'));
+const baseFiles = all.filter(f => !/\.[a-z]{2}\.html$/.test(f)).sort().reverse();
+if (!baseFiles.length) { console.error('No reports in reports-src/.'); process.exit(1); }
+const files = baseFiles;
+const bundle = {};
+const missing = [];
+for (const lg of LANGS) {
+  bundle[lg] = baseFiles.map(f => {
+    const tf = f.replace(/\.html$/, `.${lg}.html`);
+    if (lg !== 'en' && all.includes(tf)) return readFileSync(join(srcDir, tf), 'utf8');
+    if (lg !== 'en') missing.push(tf);
+    return readFileSync(join(srcDir, f), 'utf8');
+  }).join('\n<hr>\n');
+}
+if (missing.length) console.warn(`Missing translations (English shown instead): ${missing.join(', ')}`);
+const plain = JSON.stringify(bundle);
 
 const pass = await getPassword();
 const enc = new TextEncoder();
