@@ -8,9 +8,9 @@
 <style>
 :root{--bg:#0f1418;--card:#171e24;--line:#2a343d;--tx:#e6ebef;--mut:#93a1ad;--acc:#4f8cff}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+html{height:100%;overflow:hidden}body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
 a{color:var(--acc)}
-.wrap{max-width:900px;margin:0 auto;padding:24px 16px 64px}
+.wrap{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:none;margin:0;padding:24px max(16px,calc((100% - 900px)/2)) 64px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
 .top a{font-size:14px}
 #lock{max-width:360px;margin:12vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px}
@@ -32,6 +32,10 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertic
 th{color:var(--mut);font-weight:600}
 pre{white-space:pre-wrap;background:#0c1115;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px}
 hr{border:0;height:24px}
+#tabs{position:sticky;top:-24px;z-index:2;background:var(--bg);padding:8px 0;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.tab{width:auto;padding:6px 12px;font-size:13px;font-weight:600;background:#2a343d;color:var(--tx);border-radius:999px}
+.tab[aria-pressed="true"]{background:var(--acc)}
+article+article{margin-top:16px}
 #logout{width:auto;padding:6px 12px;font-size:13px;background:#2a343d}
 </style>
 </head>
@@ -48,6 +52,7 @@ hr{border:0;height:24px}
   </form>
   <div id="out">
     <div class="top"><a href="../">← Back to the map</a><button id="logout" type="button">Lock</button></div>
+    <nav id="tabs" aria-label="Departments"></nav>
     <div id="content"></div>
   </div>
 </div>
@@ -61,7 +66,23 @@ async function open(pw){
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:d(P.iv)},key,d(P.ct));
   return new TextDecoder().decode(pt);
 }
-function show(html){document.getElementById('content').innerHTML=html;document.getElementById('lock').style.display='none';document.getElementById('out').style.display='block'}
+const DEPTS=['All','Summary','Warfare','Diplomacy','Intelligence','Recruitment / HR','Events'];
+function show(html){
+  const c=document.getElementById('content');c.innerHTML=html;
+  // tag every section (h2 + following blocks) with its department
+  c.querySelectorAll('article').forEach(a=>{let cur=null;[...a.children].forEach(el=>{if(el.tagName==='H2')cur=el.textContent.trim();if(cur)el.dataset.dept=cur})});
+  const nav=document.getElementById('tabs');nav.innerHTML='';
+  DEPTS.forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d;b.className='tab';b.onclick=()=>pick(d);nav.appendChild(b)});
+  let start='All';try{start=localStorage.getItem('kvk.r4tab')||'All'}catch(x){}
+  pick(DEPTS.includes(start)?start:'All');
+  document.getElementById('lock').style.display='none';document.getElementById('out').style.display='block'}
+function pick(d){
+  try{localStorage.setItem('kvk.r4tab',d)}catch(x){}
+  document.querySelectorAll('#tabs .tab').forEach(b=>b.setAttribute('aria-pressed',b.textContent===d));
+  document.querySelectorAll('#content article').forEach(a=>{let any=false;[...a.children].forEach(el=>{
+    const keep=d==='All'||el.tagName==='H1'||el.classList.contains('meta')||el.dataset.dept===d;el.style.display=keep?'':'none';if(el.dataset.dept===d)any=true});
+    a.style.display=(d==='All'||any)?'':'none'});
+  document.querySelectorAll('#content hr').forEach(h=>h.style.display=d==='All'?'':'none')}
 document.getElementById('lock').addEventListener('submit',async ev=>{
   ev.preventDefault();const pw=document.getElementById('pw').value;const err=document.getElementById('err');err.textContent='Opening…';
   try{const h=await open(pw);if(document.getElementById('rem').checked){try{localStorage.setItem(K,pw)}catch(x){}}err.textContent='';show(h)}

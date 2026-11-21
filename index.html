@@ -47,7 +47,7 @@ textarea{width:100%;min-height:60px;background:var(--bg);border:1px solid var(--
 .ssel{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:13px;flex:1;min-width:90px}.rsel.big button{padding:6px 11px;font-size:13px}
 .warn{border-left:3px solid var(--nap);padding:6px 10px;background:#1d1a12;border-radius:4px;font-size:13px}
 @media(max-width:860px){main{height:auto}#v-map.on{grid-template-columns:1fr;grid-template-rows:62vh auto}#side{border-left:0;border-top:1px solid var(--line)}header .stats{margin-left:0}}
-</style><meta name="theme-color" content="#000000"><meta name="color-scheme" content="dark">
+/*noscroll*/html,body{height:100%;overflow:hidden;overscroll-behavior:none}body{display:flex;flex-direction:column;height:100vh;height:100dvh}body>header,body>nav,#pubBanner{flex:0 0 auto}main{flex:1 1 auto;min-height:0;height:auto!important}#tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#tabs::-webkit-scrollbar{display:none}#tabs button{flex:0 0 auto}#mapwrap{min-height:0!important}@media(max-width:860px){header{padding:6px 10px!important;gap:4px 10px!important}header .sub,header .stats{display:none!important}#v-map.on{grid-template-rows:minmax(0,58%) minmax(0,1fr)!important}#side{min-height:0;overflow:auto}#mapbtns{flex-direction:row!important;flex-wrap:wrap;left:8px;right:8px!important;top:8px!important;gap:4px!important}#mapbtns>*{padding:4px 8px!important;font-size:11px!important;border-radius:6px!important;width:auto!important}#pubBanner{font-size:11px!important;padding:3px 10px!important}}</style><meta name="theme-color" content="#000000"><meta name="color-scheme" content="dark">
 <style>
 /* Restyled per Apple HIG: semantic dark palette, base vs elevated surfaces, system font, 44pt targets, glass only on controls.
    Audit by HIG Compliance Auditor (Omraj Kumar) */
@@ -446,4 +446,4 @@ async function copyTxt(){const lines=['**'+T('txt_title')+'**'];for(const k of['
 document.querySelector('.expDip').onclick=exportDip;document.querySelector('.expTxt').onclick=copyTxt;document.getElementById('bExpMap').onclick=exportMap;
 // init
 buildField();applyI18n();window.addEventListener('resize',()=>{const r=cv.getBoundingClientRect();if(r.width){W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;draw()}});requestAnimationFrame(resize);
-</script></body></html>
+;window.addEventListener('load',()=>setTimeout(()=>{const b=document.getElementById('bSub');if(b)b.click()},60));</script></body></html>
